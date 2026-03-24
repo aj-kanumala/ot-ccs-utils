@@ -23,6 +23,11 @@ Once activated, your terminal prompt will change to show `(venv)` at the start:
 pip install git+https://github.com/aj-kanumala/ot-ccs-utils.git
 ```
 
+#### Step 4 - Sample Usage
+```python
+from research.nystrom import nystrom_completion
+```
+
 #### Other useful commands:
 
 ```python
