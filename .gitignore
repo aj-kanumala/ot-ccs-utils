@@ -1,0 +1,8 @@
+# Virtual environments
+venv/
+.env/
+env/
+
+# macOS
+.DS_Store
+**/.DS_Store
