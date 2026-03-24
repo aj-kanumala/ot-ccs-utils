@@ -1,2 +1,2 @@
-# Wass-ccs
-A lightweight, dependency-light toolkit for solving optimal transport problems. 
+# ot-ccs-utils
+A lightweight toolkit for solving optimal transport problems. 
