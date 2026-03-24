@@ -9,6 +9,9 @@ setup(
         "scipy",
         "pandas",
         "matplotlib",
+        "time",
+        "POT",
     ],
+    dependency_links=["git+https://github.com/PythonOT/POT.git#egg=POT"],
     python_requires=">=3.8",
 )
