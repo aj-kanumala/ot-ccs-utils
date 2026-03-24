@@ -9,6 +9,7 @@ setup(
         "scipy",
         "pandas",
         "matplotlib",
+        "seaborn",
         "time",
         "POT",
     ],

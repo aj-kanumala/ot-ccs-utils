@@ -36,7 +36,7 @@ def Wasserstein_Matrix(image_list, reg=1, squared=True):
         for j in range(i+1,N):
             if squared==True:
                 distance[i,j] = compute_wasserstein_distance(image_list[i], image_list[j], reg=reg)
-                # print(f"Row:{i} | Column:{j} | Distance:{distance[i,j]:.2f}")  #------Debug 
+                # print(f"Row:{i} | Column:{j} | Distance:{distance[i,j]:.2f}")  # Debug 
             else:
                 distance[i,j] = compute_wasserstein_distance(image_list[i], image_list[j], reg=reg)**.5
     distance += distance.T  
@@ -111,6 +111,30 @@ def Wass_Matrix_CCS_Col(image_list, params_CCS, squared=True, rng=None, reg=1):
     sampled_positions = np.column_stack((row_indices, col_indices, distances))
 
     return distance, J_ccs, sampled_positions
+
+
+
+# ------------- CCS on pre-computed distance matrix --------- #
+def CCS(X, params_CCS, rng=None):
+    """Cross-Concentrated Sampling (generic version)."""
+    params_CCS = set_default_params_CCS(params_CCS)
+    rng = np.random.default_rng(rng)
+    p = params_CCS['p']
+    delta = params_CCS['delta']
+    m, n = X.shape
+    num_c = round(n * delta)
+    J_ccs = rng.choice(n, num_c, replace=False)
+    C = X[:, J_ccs]
+    ubc = min(num_c * m, int(np.ceil(p * num_c * m)))
+    C_obs_ind = rng.choice(num_c * m, ubc, replace=False)
+    C_Obs = np.zeros((m, num_c), dtype=X.dtype)
+    C_Obs.flat[C_obs_ind] = C.flat[C_obs_ind]
+    X_Omega_ccs = np.zeros((m, n), dtype=X.dtype)
+    X_Omega_ccs[:, J_ccs] = C_Obs
+    selected_indices = np.argwhere(X_Omega_ccs != 0)
+    selected_indices = np.unique(selected_indices, axis=0)
+    return X_Omega_ccs, J_ccs, selected_indices, C_obs_ind
+
 
 # ── Matrix Completion Functions ───────────────────────────────────────────
 
