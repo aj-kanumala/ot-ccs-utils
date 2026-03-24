@@ -10,7 +10,6 @@ setup(
         "pandas",
         "matplotlib",
         "seaborn",
-        "time",
         "POT",
     ],
     dependency_links=["git+https://github.com/PythonOT/POT.git#egg=POT"],
