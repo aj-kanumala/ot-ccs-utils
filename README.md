@@ -22,7 +22,7 @@ pip install git+https://github.com/aj-kanumala/ot-ccs-utils.git
 
 #### Other useful commands:
 ```python
-# Deactivate when you're done
+# Deactivate venv when you're done
 deactivate
 
 # Install packages while inside venv
