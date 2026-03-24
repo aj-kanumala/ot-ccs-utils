@@ -21,7 +21,7 @@ def compute_wasserstein_distance(pc1, pc2, reg=1):
     pc1wts = pc1wts/np.sum(pc1wts) # normalize to make a probability
     pc2wts = pc2wts/np.sum(pc2wts) # normalize to make a probability  
     M = ot.dist(pc1pts, pc2pts, metric = 'sqeuclidean')  # Compute squared euclidean distance on the pointcloud points
-    W = ot.sinkhorn2(pc1wts,pc2wts, M, reg=reg) # Compute exact squared Wasserstein-2 distance between U and V  
+    W = ot.sinkhorn2(pc1wts,pc2wts, M, reg=reg) # Compute approximate squared Wasserstein-2 distance between U and V  
     return W
 
 def Wasserstein_Matrix(image_list, reg=1, squared=True):
