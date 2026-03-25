@@ -164,12 +164,10 @@ def ICURC(X_Omega, J_ccs, r, params_ICURC):
     TOL = params_ICURC['TOL']
     max_ite = params_ICURC['max_ite']
     steps_are1 = params_ICURC['steps_are1']
-
     Obs_U = X_Omega[np.ix_(J_ccs, J_ccs)]
     Obs_C = X_Omega[:, J_ccs]
     Smp_C = (Obs_C != 0)
     Smp_U = (Obs_U != 0)
-
     Omega_col = np.where(Smp_C.flatten())[0]
     Omega_U = np.where(Smp_U.flatten())[0]
     L_obs_col_vec = Obs_C.flatten()[Omega_col]
@@ -187,20 +185,16 @@ def ICURC(X_Omega, J_ccs, r, params_ICURC):
     vh = vh[:r, :]
     s = np.diag(s[:r])
     U = u @ s @ vh
-
     C = Obs_C.copy()
 
     fct_time = time.time()
     for ICURC_ite in range(1, max_ite + 1):
         ite_time = time.time()
-
         C = C @ (vh.T @ vh)
-
         U_flat = U.flatten()
         C_flat = C.flatten()
         New_Error =  (np.linalg.norm(C_flat[Omega_col] - L_obs_col_vec) +
                      np.linalg.norm(U_flat[Omega_U] - L_obs_U_vec)) / col_norm_sum
-
 
         if New_Error < TOL or ICURC_ite == max_ite:
             ICURC_time = time.time() - fct_time
@@ -210,13 +204,11 @@ def ICURC(X_Omega, J_ccs, r, params_ICURC):
             U_flat = U_flat.copy()
             U_flat[Omega_U] = L_obs_U_vec
             U = U_flat.reshape(U.shape)
-
             u, s, vh = np.linalg.svd(U, full_matrices=False)
             u = u[:, :r]
             vh = vh[:r, :]
             s = np.diag(s[:r])
             U_pinv = vh.T @ np.linalg.pinv(s) @ u.T
-
             #print(f'ICURC finished in {ICURC_ite} iterations, final error: {New_Error:.2e}, total runtime: {ICURC_time:.2f}s')
             return C, U_pinv, ICURC_time
 
@@ -224,16 +216,13 @@ def ICURC(X_Omega, J_ccs, r, params_ICURC):
             C_flat = C_flat.copy()
             C_flat[Omega_col] = (1 - eta[0]) * C_flat[Omega_col] + eta[0] * L_obs_col_vec
             C = C_flat.reshape(C.shape)
-
             U_flat = U_flat.copy()
             U_flat[Omega_U] = (1 - eta[2]) * U_flat[Omega_U] + eta[2] * L_obs_U_vec
             U = U_flat.reshape(U.shape)
-
         else:
             C_flat = C_flat.copy()
             C_flat[Omega_col] = L_obs_col_vec
             C = C_flat.reshape(C.shape)
-
             U_flat = U_flat.copy()
             U_flat[Omega_U] = L_obs_U_vec
             U = U_flat.reshape(U.shape)
@@ -243,5 +232,4 @@ def ICURC(X_Omega, J_ccs, r, params_ICURC):
         vh = vh[:r, :]
         s = np.diag(s[:r])
         U = u @ s @ vh
-
         #print(f'Iteration {ICURC_ite}: error: {New_Error:.2e}, timer: {time.time() - ite_time:.2f}s')
