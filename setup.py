@@ -11,6 +11,7 @@ setup(
         "matplotlib",
         "seaborn",
         "POT",
+        "tqdm",
     ],
     dependency_links=["git+https://github.com/PythonOT/POT.git#egg=POT"],
     python_requires=">=3.8",
