@@ -91,17 +91,25 @@ def Wass_Matrix_CCS_Col(image_list, params_CCS, squared=True, rng=None, reg=1):
         i = idx // num_c
         j = idx % num_c
         j_full = J_ccs[j]
-        if i != j_full:
-            dist = compute_wasserstein_distance(image_list[i], image_list[j_full], reg=reg)
+        # if i != j_full:
+        #     dist = compute_wasserstein_distance(point_clouds[i], point_clouds[j_full], reg=reg)
+        #     computed_dist = dist if squared else np.sqrt(dist)
+        #     distance[i, j_full] = computed_dist
+        #     # print(f"Row:{i} | Column:{j_full} | Distance:{computed_dist:.2f}")  # Debug only
+        #     row_indices.append(i)
+        #     col_indices.append(j_full)
+        #     distances.append(computed_dist)
+        # ------------- Changes to compute upper-half triangle of the matrix ------------------
+        if i < j_full:
+            dist = compute_wasserstein_distance(point_clouds[i], point_clouds[j_full], reg=reg)
             computed_dist = dist if squared else np.sqrt(dist)
             distance[i, j_full] = computed_dist
-            # print(f"Row:{i} | Column:{j_full} | Distance:{computed_dist:.2f}")  # -----Debug  
+            distance[j_full, i] = computed_dist  # fill symmetric entry
+            # print(f"Row:{i} | Column:{j_full} | Distance:{computed_dist:.2f}")  # Debug only 
             row_indices.append(i)
             col_indices.append(j_full)
-            distances.append(computed_dist)
-        else:
-            distance[i, j_full] = 0.0
-            distance[j_full, i] = 0.0
+            distances.append(computed_dist)  
+        # -------------------------------------------------------------------------------------
     
     toc = time.perf_counter()
     total_time = (toc - tic)/60
@@ -114,7 +122,7 @@ def Wass_Matrix_CCS_Col(image_list, params_CCS, squared=True, rng=None, reg=1):
 
 
 
-# ------------- CCS on pre-computed distance matrix --------- #
+# ------------- CCS on pre-computed distance matrix (for running experiments) --------- #
 def CCS(X, params_CCS, rng=None):
     """Cross-Concentrated Sampling (generic version)."""
     params_CCS = set_default_params_CCS(params_CCS)
@@ -164,12 +172,10 @@ def ICURC(X_Omega, J_ccs, r, params_ICURC):
     TOL = params_ICURC['TOL']
     max_ite = params_ICURC['max_ite']
     steps_are1 = params_ICURC['steps_are1']
-
     Obs_U = X_Omega[np.ix_(J_ccs, J_ccs)]
     Obs_C = X_Omega[:, J_ccs]
     Smp_C = (Obs_C != 0)
     Smp_U = (Obs_U != 0)
-
     Omega_col = np.where(Smp_C.flatten())[0]
     Omega_U = np.where(Smp_U.flatten())[0]
     L_obs_col_vec = Obs_C.flatten()[Omega_col]
@@ -187,20 +193,16 @@ def ICURC(X_Omega, J_ccs, r, params_ICURC):
     vh = vh[:r, :]
     s = np.diag(s[:r])
     U = u @ s @ vh
-
     C = Obs_C.copy()
 
     fct_time = time.time()
     for ICURC_ite in range(1, max_ite + 1):
         ite_time = time.time()
-
         C = C @ (vh.T @ vh)
-
         U_flat = U.flatten()
         C_flat = C.flatten()
         New_Error =  (np.linalg.norm(C_flat[Omega_col] - L_obs_col_vec) +
                      np.linalg.norm(U_flat[Omega_U] - L_obs_U_vec)) / col_norm_sum
-
 
         if New_Error < TOL or ICURC_ite == max_ite:
             ICURC_time = time.time() - fct_time
@@ -210,13 +212,11 @@ def ICURC(X_Omega, J_ccs, r, params_ICURC):
             U_flat = U_flat.copy()
             U_flat[Omega_U] = L_obs_U_vec
             U = U_flat.reshape(U.shape)
-
             u, s, vh = np.linalg.svd(U, full_matrices=False)
             u = u[:, :r]
             vh = vh[:r, :]
             s = np.diag(s[:r])
             U_pinv = vh.T @ np.linalg.pinv(s) @ u.T
-
             #print(f'ICURC finished in {ICURC_ite} iterations, final error: {New_Error:.2e}, total runtime: {ICURC_time:.2f}s')
             return C, U_pinv, ICURC_time
 
@@ -224,16 +224,13 @@ def ICURC(X_Omega, J_ccs, r, params_ICURC):
             C_flat = C_flat.copy()
             C_flat[Omega_col] = (1 - eta[0]) * C_flat[Omega_col] + eta[0] * L_obs_col_vec
             C = C_flat.reshape(C.shape)
-
             U_flat = U_flat.copy()
             U_flat[Omega_U] = (1 - eta[2]) * U_flat[Omega_U] + eta[2] * L_obs_U_vec
             U = U_flat.reshape(U.shape)
-
         else:
             C_flat = C_flat.copy()
             C_flat[Omega_col] = L_obs_col_vec
             C = C_flat.reshape(C.shape)
-
             U_flat = U_flat.copy()
             U_flat[Omega_U] = L_obs_U_vec
             U = U_flat.reshape(U.shape)
@@ -243,5 +240,4 @@ def ICURC(X_Omega, J_ccs, r, params_ICURC):
         vh = vh[:r, :]
         s = np.diag(s[:r])
         U = u @ s @ vh
-
         #print(f'Iteration {ICURC_ite}: error: {New_Error:.2e}, timer: {time.time() - ite_time:.2f}s')
