@@ -91,17 +91,25 @@ def Wass_Matrix_CCS_Col(image_list, params_CCS, squared=True, rng=None, reg=1):
         i = idx // num_c
         j = idx % num_c
         j_full = J_ccs[j]
-        if i != j_full:
-            dist = compute_wasserstein_distance(image_list[i], image_list[j_full], reg=reg)
+        # if i != j_full:
+        #     dist = compute_wasserstein_distance(point_clouds[i], point_clouds[j_full], reg=reg)
+        #     computed_dist = dist if squared else np.sqrt(dist)
+        #     distance[i, j_full] = computed_dist
+        #     # print(f"Row:{i} | Column:{j_full} | Distance:{computed_dist:.2f}")  # Debug only
+        #     row_indices.append(i)
+        #     col_indices.append(j_full)
+        #     distances.append(computed_dist)
+        # ------------- Changes to compute upper-half triangle of the matrix ------------------
+        if i < j_full:
+            dist = compute_wasserstein_distance(point_clouds[i], point_clouds[j_full], reg=reg)
             computed_dist = dist if squared else np.sqrt(dist)
             distance[i, j_full] = computed_dist
-            # print(f"Row:{i} | Column:{j_full} | Distance:{computed_dist:.2f}")  # -----Debug  
+            distance[j_full, i] = computed_dist  # fill symmetric entry
+            # print(f"Row:{i} | Column:{j_full} | Distance:{computed_dist:.2f}")  # Debug only 
             row_indices.append(i)
             col_indices.append(j_full)
-            distances.append(computed_dist)
-        else:
-            distance[i, j_full] = 0.0
-            distance[j_full, i] = 0.0
+            distances.append(computed_dist)  
+        # -------------------------------------------------------------------------------------
     
     toc = time.perf_counter()
     total_time = (toc - tic)/60
@@ -114,7 +122,7 @@ def Wass_Matrix_CCS_Col(image_list, params_CCS, squared=True, rng=None, reg=1):
 
 
 
-# ------------- CCS on pre-computed distance matrix --------- #
+# ------------- CCS on pre-computed distance matrix (for running experiments) --------- #
 def CCS(X, params_CCS, rng=None):
     """Cross-Concentrated Sampling (generic version)."""
     params_CCS = set_default_params_CCS(params_CCS)
